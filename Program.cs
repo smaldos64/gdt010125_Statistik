@@ -22,9 +22,6 @@ namespace Statistik
     {
         static void Main()
         {
-            //string inputPath = "input.txt";
-            //string groupedOutputPath = "grouped_output.txt";
-            //string ungroupedOutputPath = "ungrouped_output.txt";
             string inputPath = string.Empty;
             string groupedOutputPath = string.Empty;
             string ungroupedOutputPath = string.Empty;
@@ -36,6 +33,8 @@ namespace Statistik
             Console.Clear();
             Console.Write("Indtast navn på datafil med observationer : ");
             inputPath = Console.ReadLine();
+            Console.WriteLine("");
+            Console.WriteLine("");
 
             foreach (var line in File.ReadAllLines(inputPath))
             {
@@ -117,6 +116,8 @@ namespace Statistik
                 ungroupedOutputPath = ungroupedOutputPath + "_ungrouped.out";
                 WriteUngroupedOutput(observations, ungroupedOutputPath);
             }
+
+            Console.ReadLine();
         }
 
         static void WriteGroupedOutput(List<Interval> intervals, string path)
@@ -185,21 +186,14 @@ namespace Statistik
             var ordered = observations.OrderBy(x => x).ToList();
             var freqDict = ordered.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
 
-            //var output = new List<string> { "Ungrouped Data Table:" };
-            //output.Add("Value\tFrequency\tCumFreq\tRelFreq\tCumRelFreq\tValue*Freq");
             var output = new List<string> { "Ugrupperet Data Tabel:" };
             output.Add("Observation\tHyppighed h(x)\tSummeret Hyppighed H(x)\tFrekvens f(x)\tSummeret Frekvns F(x)\tObservation * hyppighed");
 
-            //int hyppighed = 0;
             int summeretHyppighed = 0;
             double summeretFrekvens = 0;
             double ObservationHyppighedProduktSamlet = 0;
-            int cumFreq = 0;
-            double cumRel = 0;
-            double total = observations.Count;
             double totalAntalObservationer = observations.Count;
-            double sumFx = 0;
-
+            
             foreach (var kvp in freqDict.OrderBy(x => x.Key))
             {
                 double observation = kvp.Key;
@@ -210,50 +204,67 @@ namespace Statistik
                 double observationHyppighedProdukt = observation * hyppighed;
                 ObservationHyppighedProduktSamlet += observationHyppighedProdukt;
                 output.Add($"\t{observation}\t\t{hyppighed}\t\t{summeretHyppighed}\t\t{frekvens:F2}\t\t{summeretFrekvens:F2}\t\t\t{observationHyppighedProdukt}");
-
-                cumFreq += kvp.Value;
-                double rel = kvp.Value / total;
-                cumRel += rel;
-                double fx = kvp.Key * kvp.Value;
-                sumFx += fx;
-                //output.Add($"\t{kvp.Key}\t\t{kvp.Value}\t\t{cumFreq}\t\t{rel:F2}\t\t{cumRel:F2}\t\t\t{fx}");
             }
 
-            //double mean = sumFx / total;
             double mean = ObservationHyppighedProduktSamlet / totalAntalObservationer;
-            double variance = observations.Sum(x => Math.Pow(x - mean, 2)) / total;
+            double variance = observations.Sum(x => Math.Pow(x - mean, 2)) / totalAntalObservationer;
             double stdDev = Math.Sqrt(variance);
             double min = ordered.First();
             double max = ordered.Last();
             double range = max - min;
 
-            var modes = freqDict.Where(x => x.Value == freqDict.Values.Max()).Select(x => x.Key);
-            double q1 = Percentile(ordered, 25);
-            double q2 = Percentile(ordered, 50);
-            double q3 = Percentile(ordered, 75);
+            var typeTal = freqDict.Where(x => x.Value == freqDict.Values.Max()).Select(x => x.Key);
+            double q1 = Percentile(ordered, 1);
+            double q2 = Percentile(ordered, 2);
+            double q3 = Percentile(ordered, 3);
 
-            output.Add("\nUngrouped Statistics:");
-            output.Add($"Total: {total}, Mean: {mean:F2}, StdDev: {stdDev:F2}, Variance: {variance:F2}");
-            output.Add($"Min: {min}, Max: {max}, Range: {range}");
-            output.Add($"Mode(s): {string.Join(", ", modes)}");
-            output.Add($"Quartiles: Q1={q1:F2}, Q2(Median)={q2:F2}, Q3={q3:F2}");
+            output.Add("\nUgrupperet Statistik:");
+            output.Add($"Antal Observationer * Hyppighed samlet : {ObservationHyppighedProduktSamlet}");
+            output.Add($"Antal Observationer                    : {totalAntalObservationer}");
+            output.Add($"Middelværdi                            : {ObservationHyppighedProduktSamlet} / {totalAntalObservationer} = {mean:F2}");
+            output.Add($"Varians                                : {variance:F2}");
+            output.Add($"Standardafvigelse/Spredning            : {stdDev:F2}");
+            output.Add("");
+            output.Add($"Minimums værdi                         : {min:F2}");
+            output.Add($"Maksimums værdi                        : {max:F2}");
+            output.Add($"Variationsbredde                       : {range:F2}");
+            output.Add($"Typetal                                : {string.Join(", ", typeTal.Select(x => x.ToString("F2")))}");
+            output.Add("");
+            output.Add("Kvartilsæt");
+            output.Add("----------");
+            output.Add($"Nedre Kvartil                          : {q1:F2}");
+            output.Add($"Median                                 : {q2:F2}");
+            output.Add($"Øvre Kvartil                           : {q3:F2}");
 
             File.WriteAllLines(path, output);
             output.ForEach(Console.WriteLine);
         }
 
-        static double Percentile(List<double> sortedList, double percentile)
+        //static double Percentile(List<double> sortedList, double percentile)
+        //{
+        //    int N = sortedList.Count;
+        //    double n = (N - 1) * percentile / 100.0 + 1;
+        //    if (n == 1d) return sortedList[0];
+        //    else if (n == N) return sortedList[N - 1];
+        //    else
+        //    {
+        //        int k = (int)n;
+        //        double d = n - k;
+        //        return sortedList[k - 1] + d * (sortedList[k] - sortedList[k - 1]);
+        //    }
+        //}
+
+        static double Percentile(List<double> sortedList, int fractileValue)
         {
-            int N = sortedList.Count;
-            double n = (N - 1) * percentile / 100.0 + 1;
-            if (n == 1d) return sortedList[0];
-            else if (n == N) return sortedList[N - 1];
-            else
-            {
-                int k = (int)n;
-                double d = n - k;
-                return sortedList[k - 1] + d * (sortedList[k] - sortedList[k - 1]);
-            }
+            double value = 0;
+            
+            value = sortedList.OrderBy(x => x)
+                    .Skip(sortedList.Count() * fractileValue / 4 -
+                            (sortedList.Count() * fractileValue % 4 == 0 ? 1 : 0))
+                    .Take(sortedList.Count() * fractileValue % 4 == 0 ? 2 : 1)
+                    .Average();
+
+            return (value);
         }
     }
 }
