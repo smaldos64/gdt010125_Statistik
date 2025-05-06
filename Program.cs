@@ -42,8 +42,7 @@ namespace Statistik
 
             List<double> observations = new();
             List<Interval> intervals = new();
-            //bool leftClosed = true;
-
+           
             Console.Clear();
             Console.Write("Indtast navn på datafil med observationer : ");
             inputPath = Console.ReadLine();
@@ -97,7 +96,7 @@ namespace Statistik
             if (hasGrouped)
             {
                 groupedOutputPath = inputPath.Split('.')[0];
-                groupedOutputPath = groupedOutputPath + "_grupperet.out";
+                groupedOutputPath = groupedOutputPath + "_Grupperet_Out.txt";
 
                 // Count observations into intervals
                 foreach (var obs in observations)
@@ -121,13 +120,14 @@ namespace Statistik
                         Console.WriteLine($"Warning: Observation {obs} does not fit any interval");
                     }
                 }
+                Console.WriteLine("");
                 WriteGroupedOutput(intervals, groupedOutputPath);
             }
 
             if (hasUngrouped)
             {
                 ungroupedOutputPath = inputPath.Split('.')[0];
-                ungroupedOutputPath = ungroupedOutputPath + "_ugrupperet.out";
+                ungroupedOutputPath = ungroupedOutputPath + "_Ugrupperet_Out.txt";
                 WriteUngroupedOutput(observations, ungroupedOutputPath);
             }
 
@@ -214,6 +214,8 @@ namespace Statistik
             output.Add($"Nedre Kvartil                    : {Q1:F2}");
             output.Add($"Median                           : {Q2:F2}");
             output.Add($"Øvre Kvartil                     : {Q3:F2}");
+            output.Add("");
+            output.Add("");
 
             File.WriteAllLines(path, output);
             output.ForEach(Console.WriteLine);
@@ -293,6 +295,8 @@ namespace Statistik
             output.Add($"Nedre Kvartil                          : {q1:F2}");
             output.Add($"Median                                 : {q2:F2}");
             output.Add($"Øvre Kvartil                           : {q3:F2}");
+            output.Add("");
+            output.Add("");
 
             File.WriteAllLines(path, output);
             output.ForEach(Console.WriteLine);
