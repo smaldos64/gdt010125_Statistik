@@ -15,7 +15,7 @@ namespace Statistik
     {
         public double Lower { get; set; }
         public double Upper { get; set; }
-        public long Frequency { get; set; } = 0;
+        public long Hyppighed { get; set; } = 0;
 
         public override string ToString()
         {
@@ -77,12 +77,12 @@ namespace Statistik
                 var parts = trimmed.Split('-');
                 if (parts.Length >= 2 && double.TryParse(parts[0], out double low) && double.TryParse(parts[1], out double high))
                 {
-                    long freq = 0;
-                    if (parts.Length == 3 && long.TryParse(parts[2], out long explicitFreq))
+                    long hyppighed = 0;
+                    if (parts.Length == 3 && long.TryParse(parts[2], out long explicitHyppighed))
                     {
-                        freq = explicitFreq;
+                        hyppighed = explicitHyppighed;
                     }
-                    intervals.Add(new Interval { Lower = low, Upper = high, Frequency = freq });
+                    intervals.Add(new Interval { Lower = low, Upper = high, Hyppighed = hyppighed });
                 }
                 else if (double.TryParse(trimmed, NumberStyles.Any, CultureInfo.InvariantCulture, out double val))
                 {
@@ -110,7 +110,7 @@ namespace Statistik
 
                         if (inInterval)
                         {
-                            interval.Frequency++;
+                            interval.Hyppighed++;
                             matched = true;
                             break;
                         }
@@ -140,42 +140,42 @@ namespace Statistik
             var output = new List<string> { "Grupperet Data Tabel" };
             output.Add("--------------------");
             output.Add("");
-            long totalAntalObservationer = intervals.Sum(i => i.Frequency);
-            double mean = intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Frequency) / totalAntalObservationer;
-            double variance = intervals.Sum(i => Math.Pow((i.Lower + i.Upper) / 2.0 - mean, 2) * i.Frequency) / totalAntalObservationer;
+            long totalAntalObservationer = intervals.Sum(i => i.Hyppighed);
+            double mean = intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Hyppighed) / totalAntalObservationer;
+            double variance = intervals.Sum(i => Math.Pow((i.Lower + i.Upper) / 2.0 - mean, 2) * i.Hyppighed) / totalAntalObservationer;
             long summeretHyppighed = 0;
             double summeretFrekvens = 0;
             double intervalMidtpunktGangeHyppighedSamlet = 0;
-            long maxGangetypeIntervalForekommer = intervals.Max(i => i.Frequency);
+            long maxGangetypeIntervalForekommer = intervals.Max(i => i.Hyppighed);
                         
             output.Add("Interval\t\tMidtpunkt\tHyppighed h(x)\tSummeret Hyppighed H(x)\tFrekvens f(x)\tSummeret Frekvns F(x)\tObservation * hyppighed");
 
             foreach (var i in intervals)
             {
-                summeretHyppighed += i.Frequency;
+                summeretHyppighed += i.Hyppighed;
                 double mid = (i.Lower + i.Upper) / 2.0;
-                double frekvens = (double)i.Frequency / totalAntalObservationer;
+                double frekvens = (double)i.Hyppighed / totalAntalObservationer;
                 summeretFrekvens += frekvens;
-                double intervalMidtpunktGangeHyppighed = i.Frequency * mid;
+                double intervalMidtpunktGangeHyppighed = i.Hyppighed * mid;
                 intervalMidtpunktGangeHyppighedSamlet += intervalMidtpunktGangeHyppighed;
                 if (true == leftClosed)
                 {
-                    output.Add($"[{i.Lower:F2} - {i.Upper:F2}[\t{mid:F2}\t\t{i.Frequency}\t\t{summeretHyppighed}\t\t\t{frekvens:F2}\t\t{summeretFrekvens:F2}\t\t\t{intervalMidtpunktGangeHyppighed:F2}");
+                    output.Add($"[{i.Lower:F2} - {i.Upper:F2}[\t{mid:F2}\t\t{i.Hyppighed}\t\t{summeretHyppighed}\t\t\t{frekvens:F2}\t\t{summeretFrekvens:F2}\t\t\t{intervalMidtpunktGangeHyppighed:F2}");
                 }
                 else
                 {
-                    output.Add($"]{i.Lower:F2} - {i.Upper:F2}]\t{mid:F2}\t\t{i.Frequency}\t\t{summeretHyppighed}\t\t\t{frekvens:F2}\t\t{summeretFrekvens:F2}\t\t\t{intervalMidtpunktGangeHyppighed:F2}");
+                    output.Add($"]{i.Lower:F2} - {i.Upper:F2}]\t{mid:F2}\t\t{i.Hyppighed}\t\t{summeretHyppighed}\t\t\t{frekvens:F2}\t\t{summeretFrekvens:F2}\t\t\t{intervalMidtpunktGangeHyppighed:F2}");
                 }
             }
 
             double stdDev = Math.Sqrt(variance);
-            Interval minInterval = intervals.First(i => i.Frequency > 0);
-            Interval maxInterval = intervals.Last(i => i.Frequency > 0);
+            Interval minInterval = intervals.First(i => i.Hyppighed > 0);
+            Interval maxInterval = intervals.Last(i => i.Hyppighed > 0);
             double range = maxInterval.Upper - minInterval.Lower;
 
-            double modeLower = intervals.First(i => i.Frequency == maxGangetypeIntervalForekommer).Lower;
-            double modeUpper = intervals.First(i => i.Frequency == maxGangetypeIntervalForekommer).Upper;
-            var typeIntervaller = intervals.Where(i => i.Frequency == maxGangetypeIntervalForekommer).Select(i => (i.Lower, i.Upper));
+            double modeLower = intervals.First(i => i.Hyppighed == maxGangetypeIntervalForekommer).Lower;
+            double modeUpper = intervals.First(i => i.Hyppighed == maxGangetypeIntervalForekommer).Upper;
+            var typeIntervaller = intervals.Where(i => i.Hyppighed == maxGangetypeIntervalForekommer).Select(i => (i.Lower, i.Upper));
 
             double Q1 = ComputeGroupedQuartile(intervals, totalAntalObservationer, 0.25);
             double Q2 = ComputeGroupedQuartile(intervals, totalAntalObservationer, 0.50);
@@ -186,7 +186,7 @@ namespace Statistik
             output.Add("-------------------");
             output.Add($"Observationer * Hyppighed samlet : {intervalMidtpunktGangeHyppighedSamlet}");
             output.Add($"Antal observationer              : {totalAntalObservationer}");
-            output.Add($"Middelværdi                      : {intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Frequency).ToString()} / {totalAntalObservationer} = {mean:F2}");
+            output.Add($"Middelværdi                      : {intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Hyppighed).ToString()} / {totalAntalObservationer} = {mean:F2}");
             output.Add($"Varians                          : {variance:F2}");
             output.Add($"Standardafvigelse/Spredning      : {stdDev:F2}");
             if (true == leftClosed)
@@ -197,6 +197,7 @@ namespace Statistik
             {
                 output.Add($"Min Interval                     : ]{minInterval.Lower:F2} - {minInterval.Upper:F2}]");
             }
+
             if (true == leftClosed)
             {
                 output.Add($"Max Interval                     : [{maxInterval.Lower:F2} - {maxInterval.Upper:F2}[");
@@ -206,7 +207,16 @@ namespace Statistik
                 output.Add($"Max Interval                     : ]{maxInterval.Lower:F2} - {maxInterval.Upper:F2}]");
             }
             output.Add($"Interval Range                   : {maxInterval.Upper:F2} - {minInterval.Lower:F2} = {range:F2}");
-            output.Add($"Type Intervaller                 : {string.Join(" - ", typeIntervaller.Select(i => (i.Lower.ToString("F2"), i.Upper.ToString("F2"))))}");
+
+            if (true == leftClosed)
+            {
+                output.Add($"Type Intervaller                 : {string.Join(" ", typeIntervaller.Select(i => $"[{i.Lower:F2} - {i.Upper:F2}["))}");
+            }
+            else
+            {
+                output.Add($"Type Intervaller                 : {string.Join(" ", typeIntervaller.Select(i => $"]{i.Lower:F2} - {i.Upper:F2}]"))}");
+            }
+            //output.Add($"Type Intervaller                 : {string.Join(" - ", typeIntervaller.Select(i => (i.Lower.ToString("F2"), i.Upper.ToString("F2"))))}");
             //output.Add($"Type Intervaller                 : {string.Join(" , ", typeIntervaller.Select(i => i.ToString()))}");
             output.Add("");
             output.Add("Kvartilsæt");
@@ -226,12 +236,12 @@ namespace Statistik
             double cumulative = 0;
             foreach (var interval in intervals)
             {
-                cumulative += interval.Frequency;
+                cumulative += interval.Hyppighed;
                 if (cumulative >= fraction * totalFrequency)
                 {
-                    double cumulativeBefore = cumulative - interval.Frequency;
+                    double cumulativeBefore = cumulative - interval.Hyppighed;
                     double h = interval.Upper - interval.Lower;
-                    double result = interval.Lower + ((fraction * totalFrequency - cumulativeBefore) / interval.Frequency) * h;
+                    double result = interval.Lower + ((fraction * totalFrequency - cumulativeBefore) / interval.Hyppighed) * h;
                     return result;
                 }
             }
