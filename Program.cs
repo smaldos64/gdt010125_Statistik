@@ -184,46 +184,47 @@ namespace Statistik
             output.Add("");
             output.Add("Grupperet Statistik");
             output.Add("-------------------");
-            output.Add($"Observationer * Hyppighed samlet : {intervalMidtpunktGangeHyppighedSamlet}");
-            output.Add($"Antal observationer              : {totalAntalObservationer}");
-            output.Add($"Middelværdi                      : {intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Hyppighed).ToString()} / {totalAntalObservationer} = {mean:F2}");
-            output.Add($"Varians                          : {variance:F2}");
-            output.Add($"Standardafvigelse/Spredning      : {stdDev:F2}");
+            output.Add($"Observationer * Hyppighed samlet    : {intervalMidtpunktGangeHyppighedSamlet}");
+            output.Add($"Antal observationer                 : {totalAntalObservationer}");
+            output.Add($"Middelværdi                         : {intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Hyppighed).ToString()} / {totalAntalObservationer} = {mean:F2}");
+            output.Add($"Varians                             : {variance:F2}");
+            output.Add($"Standardafvigelse/Spredning         : {stdDev:F2}");
             if (true == leftClosed)
             {
-                output.Add($"Min Interval                     : [{minInterval.Lower:F2} - {minInterval.Upper:F2}[");
+                output.Add($"Min Interval                        : [{minInterval.Lower:F2} - {minInterval.Upper:F2}[");
             }
             else
             {
-                output.Add($"Min Interval                     : ]{minInterval.Lower:F2} - {minInterval.Upper:F2}]");
+                output.Add($"Min Interval                        : ]{minInterval.Lower:F2} - {minInterval.Upper:F2}]");
             }
 
             if (true == leftClosed)
             {
-                output.Add($"Max Interval                     : [{maxInterval.Lower:F2} - {maxInterval.Upper:F2}[");
+                output.Add($"Max Interval                        : [{maxInterval.Lower:F2} - {maxInterval.Upper:F2}[");
             }
             else
             {
-                output.Add($"Max Interval                     : ]{maxInterval.Lower:F2} - {maxInterval.Upper:F2}]");
+                output.Add($"Max Interval                        : ]{maxInterval.Lower:F2} - {maxInterval.Upper:F2}]");
             }
-            output.Add($"Interval Range                   : {maxInterval.Upper:F2} - {minInterval.Lower:F2} = {range:F2}");
+            output.Add($"Interval Range                      : {maxInterval.Upper:F2} - {minInterval.Lower:F2} = {range:F2}");
 
             if (true == leftClosed)
             {
-                output.Add($"Type Intervaller                 : {string.Join(" ", typeIntervaller.Select(i => $"[{i.Lower:F2} - {i.Upper:F2}["))}");
+                output.Add($"Type Intervaller                    : {string.Join(" ", typeIntervaller.Select(i => $"[{i.Lower:F2} - {i.Upper:F2}["))}");
             }
             else
             {
-                output.Add($"Type Intervaller                 : {string.Join(" ", typeIntervaller.Select(i => $"]{i.Lower:F2} - {i.Upper:F2}]"))}");
+                output.Add($"Type Intervaller                    : {string.Join(" ", typeIntervaller.Select(i => $"]{i.Lower:F2} - {i.Upper:F2}]"))}");
             }
             //output.Add($"Type Intervaller                 : {string.Join(" - ", typeIntervaller.Select(i => (i.Lower.ToString("F2"), i.Upper.ToString("F2"))))}");
             //output.Add($"Type Intervaller                 : {string.Join(" , ", typeIntervaller.Select(i => i.ToString()))}");
+            output.Add($"Antal gange Typeinterval forekommer : {maxGangetypeIntervalForekommer}");
             output.Add("");
             output.Add("Kvartilsæt");
             output.Add("----------");
-            output.Add($"Nedre Kvartil                    : {Q1:F2}");
-            output.Add($"Median                           : {Q2:F2}");
-            output.Add($"Øvre Kvartil                     : {Q3:F2}");
+            output.Add($"Nedre Kvartil                       : {Q1:F2}");
+            output.Add($"Median                              : {Q2:F2}");
+            output.Add($"Øvre Kvartil                        : {Q3:F2}");
             output.Add("");
             output.Add("");
 
