@@ -1,3 +1,4 @@
+```
 Dette Repository indeholder kode til at lave statistiske beregninger på både grupperede - og ugrupperede observationer.
 
 Hvis man udelukkende ønsker at arbejde med et ugrupperet datasæt af observationer, laver man en tekstfil, som f.eks. kan hedde Ugrupperet.txt og anigver denne som inout fil, når man kører programmet.
@@ -84,3 +85,4 @@ INTERVALS: LEFT_CLOSED
 250-252-0
 252-253-1
 
+```
