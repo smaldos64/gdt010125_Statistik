@@ -30,6 +30,12 @@ namespace Statistik
         }
     }
 
+    public enum ExcelKvartilMetode
+    {
+        EXC, // QUARTILE.EXC (ekskluderer median)
+        INC  // QUARTILE.INC (inkluderer median)
+    }
+
     class Program
     {
         public static bool leftClosed = true;
@@ -139,7 +145,7 @@ namespace Statistik
             intervals = intervals.OrderBy(i => i.Lower).ToList();
             var output = new List<string> { "Grupperet Data Tabel" };
             output.Add("--------------------");
-            output.Add("");
+            //output.Add("");
             long totalAntalObservationer = intervals.Sum(i => i.Hyppighed);
             double mean = intervals.Sum(i => ((i.Lower + i.Upper) / 2.0) * i.Hyppighed) / totalAntalObservationer;
             double variance = intervals.Sum(i => Math.Pow((i.Lower + i.Upper) / 2.0 - mean, 2) * i.Hyppighed) / totalAntalObservationer;
@@ -254,7 +260,9 @@ namespace Statistik
             var ordered = observations.OrderBy(x => x).ToList();
             var freqDict = ordered.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
 
-            var output = new List<string> { "Ugrupperet Data Tabel:" };
+            var output = new List<string> { "Ugrupperet Data Tabel" };
+            output.Add("---------------------");
+            //output.Add("");
             output.Add("Observation\tHyppighed h(x)\tSummeret Hyppighed H(x)\tFrekvens f(x)\tSummeret Frekvns F(x)\tObservation * hyppighed");
 
             long summeretHyppighed = 0;
@@ -282,13 +290,16 @@ namespace Statistik
             double range = max - min;
 
             var typeTal = freqDict.Where(x => x.Value == freqDict.Values.Max()).Select(x => x.Key);
-            double q1 = Percentile(ordered, 1);
-            double q2 = Percentile(ordered, 2);
-            double q3 = Percentile(ordered, 3);
+            //double q1 = Percentile(ordered, 1);
+            //double q2 = Percentile(ordered, 2);
+            //double q3 = Percentile(ordered, 3);
+            var (q1Exc, q2Exc, q3Exc) = BeregnKvartilsætUgrupperet(ordered, ExcelKvartilMetode.EXC);
+            var (q1Inc, q2Inc, q3Inc) = BeregnKvartilsætUgrupperet(ordered, ExcelKvartilMetode.INC);
 
-            output.Add("\nUgrupperet Statistik:");
-            output.Add("-----------------------");
             output.Add("");
+            output.Add("Ugrupperet Statistik");
+            output.Add("--------------------");
+            //output.Add("");
             output.Add($"Observationer * Hyppighed samlet       : {ObservationHyppighedProduktSamlet}");
             output.Add($"Antal Observationer                    : {totalAntalObservationer}");
             output.Add($"Middelværdi                            : {ObservationHyppighedProduktSamlet} / {totalAntalObservationer} = {mean:F2}");
@@ -297,40 +308,37 @@ namespace Statistik
             output.Add("");
             output.Add($"Minimums værdi                         : {min:F2}");
             output.Add($"Maksimums værdi                        : {max:F2}");
-            output.Add($"Variationsbredde                       : {range:F2}");
+            output.Add($"Variationsbredde                       : {max:F2} - {min:F2} = {range:F2}");
             output.Add($"Typetal                                : {string.Join(", ", typeTal.Select(x => x.ToString("F2")))}");
             output.Add($"Antal gange Typetal forekommer         : {freqDict.Values.Max()}");
             output.Add("");
             output.Add("Kvartilsæt");
             output.Add("----------");
-            output.Add($"Nedre Kvartil                          : {q1:F2}");
-            output.Add($"Median                                 : {q2:F2}");
-            output.Add($"Øvre Kvartil                           : {q3:F2}");
+            output.Add($"Nedre Kvartil (Median inkluderet)      : {q1Inc:F2}");
+            output.Add($"Median (Median inkluderet)             : {q2Inc:F2}");
+            output.Add($"Øvre Kvartil (Median inkluderet)       : {q3Inc:F2}");
+            output.Add($"Kvartil Afstand (Median inkluderet)    : {q3Inc:F2} - {q1Inc:F2} = {q3Inc - q1Inc:F2}");
             output.Add("");
+            output.Add($"Nedre Kvartil (Median ekskluderet)     : {q1Exc:F2}");
+            output.Add($"Median (Median ekskluderet)            : {q2Exc:F2}");
+            output.Add($"Øvre Kvartil (Median ekskluderet)      : {q3Exc:F2}");
+            output.Add($"Kvartil Afstand (Median ekskluderet)   : {q3Exc:F2} - {q1Exc:F2} = {q3Exc - q1Exc:F2}");
             output.Add("");
 
             File.WriteAllLines(path, output);
             output.ForEach(Console.WriteLine);
         }
 
-        //static double Percentile(List<double> sortedList, double percentile)
-        //{
-        //    int N = sortedList.Count;
-        //    double n = (N - 1) * percentile / 100.0 + 1;
-        //    if (n == 1d) return sortedList[0];
-        //    else if (n == N) return sortedList[N - 1];
-        //    else
-        //    {
-        //        int k = (int)n;
-        //        double d = n - k;
-        //        return sortedList[k - 1] + d * (sortedList[k] - sortedList[k - 1]);
-        //    }
-        //}
-
         static double Percentile(List<double> sortedList, int fractileValue)
         {
             double value = 0;
             
+            //value = sortedList.OrderBy(x => x)
+            //        .Skip(sortedList.Count() * fractileValue / 4 -
+            //                (sortedList.Count() * fractileValue % 4 == 0 ? 1 : 0))
+            //        .Take(sortedList.Count() * fractileValue % 4 == 0 ? 2 : 1)
+            //        .Average();
+
             value = sortedList.OrderBy(x => x)
                     .Skip(sortedList.Count() * fractileValue / 4 -
                             (sortedList.Count() * fractileValue % 4 == 0 ? 1 : 0))
@@ -339,5 +347,72 @@ namespace Statistik
 
             return (value);
         }
+
+        //public static (double Q1, double Q2, double Q3) BeregnKvartilsætUgrupperet(List<double> data)
+        //{
+        //    if (data == null || data.Count == 0)
+        //        throw new ArgumentException("Data må ikke være tom.");
+
+        //    var sorted = data.OrderBy(x => x).ToList();
+        //    int n = sorted.Count;
+
+        //    double Median(List<double> list)
+        //    {
+        //        int count = list.Count;
+        //        if (count % 2 == 0)
+        //            return (list[count / 2 - 1] + list[count / 2]) / 2.0;
+        //        else
+        //            return list[count / 2];
+        //    }
+
+        //    double q2 = Median(sorted);
+
+        //    List<double> lowerHalf = sorted.Take(n / 2).ToList();
+        //    List<double> upperHalf = sorted.Skip((n + 1) / 2).ToList();
+
+        //    double q1 = Median(lowerHalf);
+        //    double q3 = Median(upperHalf);
+
+        //    return (q1, q2, q3);
+        //}
+
+        public static double BeregnKvartil(List<double> data, double kvartil, ExcelKvartilMetode metode)
+        {
+            if (data == null || data.Count < 2)
+                throw new ArgumentException("Mindst 2 observationer kræves.");
+
+            if (kvartil < 0 || kvartil > 1)
+                throw new ArgumentOutOfRangeException(nameof(kvartil), "Kvartil skal være mellem 0 og 1.");
+
+            var sorted = data.OrderBy(x => x).ToList();
+            int n = sorted.Count;
+
+            double pos = metode == ExcelKvartilMetode.EXC
+                ? kvartil * (n + 1)
+                : kvartil * (n - 1) + 1;
+
+            if (pos <= 1)
+                return sorted[0];
+            if (pos >= n)
+                return sorted[n - 1];
+
+            int lowerIndex = (int)Math.Floor(pos) - 1;
+            int upperIndex = lowerIndex + 1;
+            double fraction = pos - Math.Floor(pos);
+
+            return sorted[lowerIndex] + fraction * (sorted[upperIndex] - sorted[lowerIndex]);
+        }
+
+        public static (double Q1, double Q2, double Q3) BeregnKvartilsætUgrupperet(
+            List<double> data,
+            ExcelKvartilMetode metode = ExcelKvartilMetode.EXC)
+        {
+            return (
+                BeregnKvartil(data, 0.25, metode),
+                BeregnKvartil(data, 0.50, metode),
+                BeregnKvartil(data, 0.75, metode)
+            );
+        }
+
     }
 }
