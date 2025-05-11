@@ -186,6 +186,8 @@ namespace Statistik
             double Q1 = ComputeGroupedQuartile(intervals, totalAntalObservationer, 0.25);
             double Q2 = ComputeGroupedQuartile(intervals, totalAntalObservationer, 0.50);
             double Q3 = ComputeGroupedQuartile(intervals, totalAntalObservationer, 0.75);
+            var (q1Exc, q2Exc, q3Exc) = BeregnKvartilerGrupperet(intervals, ExcelKvartilMetode.EXC);
+            var (q1Inc, q2Inc, q3Inc) = BeregnKvartilerGrupperet(intervals, ExcelKvartilMetode.INC);
 
             output.Add("");
             output.Add("Grupperet Statistik");
@@ -228,9 +230,18 @@ namespace Statistik
             output.Add("");
             output.Add("Kvartilsæt");
             output.Add("----------");
-            output.Add($"Nedre Kvartil                       : {Q1:F2}");
-            output.Add($"Median                              : {Q2:F2}");
-            output.Add($"Øvre Kvartil                        : {Q3:F2}");
+            //output.Add($"Nedre Kvartil                       : {Q1:F2}");
+            //output.Add($"Median                              : {Q2:F2}");
+            //output.Add($"Øvre Kvartil                        : {Q3:F2}");
+            output.Add($"Nedre Kvartil (Median inkluderet)      : {q1Inc:F2}");
+            output.Add($"Median (Median inkluderet)             : {q2Inc:F2}");
+            output.Add($"Øvre Kvartil (Median inkluderet)       : {q3Inc:F2}");
+            output.Add($"Kvartil Afstand (Median inkluderet)    : {q3Inc:F2} - {q1Inc:F2} = {q3Inc - q1Inc:F2}");
+            output.Add("");
+            output.Add($"Nedre Kvartil (Median ekskluderet)     : {q1Exc:F2}");
+            output.Add($"Median (Median ekskluderet)            : {q2Exc:F2}");
+            output.Add($"Øvre Kvartil (Median ekskluderet)      : {q3Exc:F2}");
+            output.Add($"Kvartil Afstand (Median ekskluderet)   : {q3Exc:F2} - {q1Exc:F2} = {q3Exc - q1Exc:F2}");
             output.Add("");
             output.Add("");
 
@@ -376,7 +387,7 @@ namespace Statistik
         //    return (q1, q2, q3);
         //}
 
-        public static double BeregnKvartil(List<double> data, double kvartil, ExcelKvartilMetode metode)
+        public static double BeregnKvartilUgrupperet(List<double> data, double kvartil, ExcelKvartilMetode metode)
         {
             if (data == null || data.Count < 2)
                 throw new ArgumentException("Mindst 2 observationer kræves.");
@@ -408,9 +419,56 @@ namespace Statistik
             ExcelKvartilMetode metode = ExcelKvartilMetode.EXC)
         {
             return (
-                BeregnKvartil(data, 0.25, metode),
-                BeregnKvartil(data, 0.50, metode),
-                BeregnKvartil(data, 0.75, metode)
+                BeregnKvartilUgrupperet(data, 0.25, metode),
+                BeregnKvartilUgrupperet(data, 0.50, metode),
+                BeregnKvartilUgrupperet(data, 0.75, metode)
+            );
+        }
+
+        private static double BeregnKvartilGrupperet(List<Interval> intervaller, long N, double p, ExcelKvartilMetode metode)
+        {
+            double pos = metode switch
+            {
+                ExcelKvartilMetode.INC => p * (N - 1) + 1,
+                ExcelKvartilMetode.EXC => p * (N + 1),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            long kumuleret = 0;
+            foreach (var interval in intervaller)
+            {
+                long før = kumuleret;
+                kumuleret += interval.Hyppighed;
+
+                if (kumuleret >= pos)
+                {
+                    double L = interval.Lower;
+                    double f = interval.Hyppighed;
+                    double w = interval.Upper - interval.Lower;
+
+                    return L + ((pos - før) / f) * w;
+                }
+            }
+
+            // Hvis vi ender udenfor (burde ikke ske)
+            return intervaller.Last().Upper;
+        }
+
+        public static (double Q1, double Q2, double Q3) BeregnKvartilerGrupperet(List<Interval> intervaller, ExcelKvartilMetode metode)
+        {
+            if (intervaller == null || intervaller.Count == 0)
+                throw new ArgumentException("Der kræves mindst ét interval");
+
+            long N = intervaller.Sum(i => i.Hyppighed);
+
+            double p1 = 0.25;
+            double p2 = 0.50;
+            double p3 = 0.75;
+
+            return (
+                BeregnKvartilGrupperet(intervaller, N, p1, metode),
+                BeregnKvartilGrupperet(intervaller, N, p2, metode),
+                BeregnKvartilGrupperet(intervaller, N, p3, metode)
             );
         }
 
